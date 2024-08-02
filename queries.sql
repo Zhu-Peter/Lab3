@@ -101,33 +101,349 @@ create table order_menu_item (
     primary key (id)
 );
 
+-- CLIENT
+-- GET
 create procedure get_client(client_id int)
     select * from client where id = client_id;
 
-create procedure get_restaurant(restaurant_id int)
-    select * from restaurant where id = restaurant_id;
+-- POST
+DELIMITER $$
+$$
+create DEFINER=`root`@`localhost` procedure `create_client`(
+    email_input varchar(255),
+    first_name_input varchar(255),
+    last_name_input varchar(255),
+    image_url_input varchar(255),
+    username_input varchar(255),
+    password_input varchar(255)
+)
+begin
+    insert into client (email, first_name, last_name, image_url, username, password) values
+        (email_input, first_name_input, last_name_input, image_url_input, username_input, password_input);
+    commit;
+    select id from client where id = last_insert_id();
+end$$
+DELIMITER ;
+-- PATCH
+DELIMITER $$
+$$
+create DEFINER=`root`@`localhost` procedure `update_client`(
+    email_input varchar(255),
+    first_name_input varchar(255),
+    last_name_input varchar(255),
+    image_url_input varchar(255),
+    username_input varchar(255),
+    password_input varchar(255),
+    token_input varchar(255)
+)
+begin
+    DECLARE token_id int;
+    select client_id into token_id from client_session where token = token_input;
 
-create procedure get_restaurants
-    select * from restaurant;
+    IF token_id IS NULL THEN
 
-create procedure get_menu_item(restaurant int)
-    select * from menu_item where restaurant_id = restaurant;
+        ROLLBACK;
 
+        SELECT 'Invalid token' AS message;
 
+    ELSE
+        IF email_input IS NOT NULL THEN
+            update client set email = email_input where id = token_id;
+        END IF;
+        IF first_name_input IS NOT NULL THEN
+            update client set first_name = first_name_input where id = token_id;
+        END IF;
+        IF last_name_input IS NOT NULL THEN
+            update client set last_name = last_name_input where id = token_id;
+        END IF;
+        IF username_input IS NOT NULL THEN
+            update client set username = username_input where id = token_id;
+        END IF;
+        IF password_input IS NOT NULL THEN
+            update client set password = password_input where id = token_id;
+        END IF;
+        IF image_url_input IS NOT NULL THEN
+            update client set image_url = image_url_input where id = token_id;
+        END IF;
 
+        COMMIT;
 
+        
+    END IF;
+end$$
+DELIMITER ;
+
+-- DELETE
+DELIMITER $$
+$$
+create DEFINER=`root`@`localhost` procedure `delete_client`(token_input varchar(255))
+begin
+    DECLARE token_id int;
+    select client_id into token_id from client_session where token = token_input;
+
+    IF token_id IS NULL THEN
+
+        ROLLBACK;
+
+        SELECT 'Invalid token' AS message;
+
+    ELSE
+        DELETE FROM client WHERE id = token_id;
+        COMMIT;
+    END IF;
+end$$
+DELIMITER ;
+
+-- LOGIN
 create procedure client_login(username_input varchar(255), password_input varchar(255))
     select id from client where username = username_input and password = password_input;
 
+-- LOGOUT
+create procedure client_logout(token_input varchar(255))
+    delete from client_session where token = token_input;
+
+-- RESTAURANT
+-- GET
+create procedure get_restaurant(restaurant_id int)
+    select * from restaurant where id = restaurant_id;
+
+-- POST
+DELIMITER $$
+$$
+create DEFINER=`root`@`localhost` procedure `create_restaurant`(
+    name_input varchar(255),
+    address_input varchar(255),
+    phone_input varchar(255),
+    email_input varchar(255),
+    bio_input varchar(255),
+    city_input varchar(255),
+    profile_url_input varchar(255),
+    banner_url_input varchar(255),
+    password_input varchar(255)
+)
+begin
+    insert into restaurant (name, address, phone, email, bio, city, profile_url, banner_url, password) values
+        (name_input, address_input, phone_input, email_input, bio_input, city_input, profile_url_input, banner_url_input, password_input);
+    commit;
+    select id from restaurant where id = last_insert_id();
+end$$
+DELIMITER ;
+-- PATCH
+DELIMITER $$
+$$
+create DEFINER=`root`@`localhost` procedure `update_restaurant`(
+    name_input varchar(255),
+    address_input varchar(255),
+    phone_input varchar(255),
+    email_input varchar(255),
+    bio_input varchar(255),
+    city_input varchar(255),
+    profile_url_input varchar(255),
+    banner_url_input varchar(255),
+    password_input varchar(255),
+    token_input varchar(255)
+)
+begin
+    DECLARE token_id int;
+    select restaurant_id into token_id from restaurant_session where token = token_input;
+
+    IF token_id IS NULL THEN
+
+        ROLLBACK;
+
+        SELECT 'Invalid token' AS message;
+
+    ELSE
+        IF email_input IS NOT NULL THEN
+            update restaurant set email = email_input where id = token_id;
+        END IF;
+        IF password_input IS NOT NULL THEN
+            update restaurant set password = password_input where id = token_id;
+        END IF;
+        IF name_input IS NOT NULL THEN
+            update restaurant set name = name_input where id = token_id;
+        END IF;
+        IF address_input IS NOT NULL THEN
+            update restaurant set address = address_input where id = token_id;
+        END IF;
+        IF phone_input IS NOT NULL THEN
+            update restaurant set phone = phone_input where id = token_id;
+        END IF;
+        IF profile_url_input IS NOT NULL THEN
+            update restaurant set profile_url = profile_url_input where id = token_id;
+        END IF;
+        IF bio_input IS NOT NULL THEN
+            update restaurant set bio = bio_input where id = token_id;
+        END IF;
+        IF banner_url_input IS NOT NULL THEN
+            update restaurant set banner_url = banner_url_input where id = token_id;
+        END IF;
+        IF city_input IS NOT NULL THEN
+            update restaurant set city = city_input where id = token_id;
+        END IF;
+
+        commit;
+    END IF;
+end$$
+DELIMITER ;
+-- DELETE
+DELIMITER $$
+$$
+create DEFINER=`root`@`localhost` procedure `delete_restaurant`(token_input varchar(255))
+begin
+    DECLARE token_id int;
+    select restaurant_id into token_id from restaurant_session where token = token_input;
+
+    IF token_id IS NULL THEN
+
+        ROLLBACK;
+
+        SELECT 'Invalid token' AS message;
+
+    ELSE
+        DELETE FROM restaurant WHERE id = token_id;
+        COMMIT;
+    END IF;
+end$$
+DELIMITER ;
+
+-- LOG IN
 create procedure restaurant_login(email_input varchar(255), password_input varchar(255))
     select id from restaurant where email = email_input and password = password_input;
 
+-- GET ALL RESTAURANTS
+create procedure get_restaurants
+    select * from restaurant;
+
+-- MENU
+-- GET
+create procedure get_menu_item(restaurant int)
+    select * from menu_item where restaurant_id = restaurant;
+
+-- POST
+DELIMITER $$
+$$
+create DEFINER=`root`@`localhost` procedure `new_menu_item`(
+    description_input varchar(255),
+    image_url_input varchar(255),
+    name_input varchar(255),
+    price_input decimal(10,2),
+    token_input varchar(255)
+)
+begin
+    DECLARE token_id int;   
+    select restaurant_id into token_id from restaurant_session where token = token_input;
+
+    IF token_id IS NULL THEN
+
+        ROLLBACK;
+
+        SELECT 'Invalid token' AS message;
+
+    ELSE
+        INSERT INTO menu_item (description, image_url, name, price, restaurant_id)
+        VALUES (description_input, image_url_input, name_input, price_input, token_id);
+
+        commit;
+
+    END IF;
+end$$
+DELIMITER ;
+
+-- PATCH
+DELIMITER $$
+$$
+create DEFINER=`root`@`localhost` procedure `edit_menu_item`(
+    description_input varchar(255),
+    image_url_input varchar(255),
+    name_input varchar(255),
+    price_input decimal(10,2),
+    token_input varchar(255),
+    menu_id_input int
+)
+begin
+    DECLARE token_id int;   
+    select restaurant_id into token_id from restaurant_session where token = token_input;
+
+    IF token_id IS NULL THEN
+
+        ROLLBACK;
+
+        SELECT 'Invalid token' AS message;
+
+    ELSE
+        IF description_input IS NOT NULL THEN
+            update menu_item set description = description_input where restaurant_id = token_id and menu_id = menu_id_input;
+        END IF;
+        IF image_url_input IS NOT NULL THEN
+            update menu_item set image_url = image_url_input where restaurant_id = token_id and menu_id = menu_id_input;
+        END IF;
+        IF name_input IS NOT NULL THEN
+            update menu_item set name = name_input where restaurant_id = token_id and menu_id = menu_id_input;
+        END IF;
+        IF price_input IS NOT NULL THEN
+            update menu_item set price = price_input where restaurant_id = token_id and menu_id = menu_id_input;
+        END IF;
+
+        COMMIT;
+
+    END IF;
+end$$
+DELIMITER ;
+-- DELETE
+DELIMITER $$
+$$
+create DEFINER=`root`@`localhost` procedure `delete_menu_item`(
+    token_input varchar(255),
+    menu_id_input int
+)
+begin
+    DECLARE token_id int;   
+    select restaurant_id into token_id from restaurant_session where token = token_input;
+
+    IF token_id IS NULL THEN
+
+        ROLLBACK;
+
+        SELECT 'Invalid token' AS message;
+
+    ELSE
+        delete from menu_item where id = menu_id_input and restaurant_id = token_id;
+    end if;
+end$$
+DELIMITER ;
+-- ORDERS
+-- GET
 DELIMITER $$
 $$
 create DEFINER=`root`@`localhost` procedure `get_client_orders`(token_input varchar(255))
 begin
     DECLARE token_id int;
-    select id into token_id from restaurant_session where token = token_input;
+    select client_id into token_id from client_session where token = token_input;
+
+    IF token_id IS NULL THEN
+
+        ROLLBACK;
+
+        SELECT 'Invalid token' AS message;
+
+    ELSE
+
+    select * from order_item where client_id = token_id;
+end$$
+DELIMITER ;
+
+-- POST
+
+
+-- RESTAURANT ORDERS
+-- GET
+DELIMITER $$
+$$
+create DEFINER=`root`@`localhost` procedure `get_restaurant_orders`(token_input varchar(255))
+begin
+    DECLARE token_id int;
+    select restaurant_id into token_id from restaurant_session where token = token_input;
 
     IF token_id IS NULL THEN
 
@@ -141,4 +457,4 @@ begin
 end$$
 DELIMITER ;
 
-
+-- PATCH

@@ -42,6 +42,16 @@ def update_client():
 def delete_client():
     return
 
+# Log a client in. Will error if the email / password don't exist in the system.
+@app.post('/api/client-login')
+def client_login():
+    return
+
+# Delete an existing token. Will error if the token sent does not exist.
+@app.delete('/api/client-login')
+def client_logout():
+    return
+
 # restaurant
 # Returns information about a single restaurant, will error if the restaurant_id does not exist.
 @app.get('/api/restaurant')
@@ -123,7 +133,7 @@ def delete_menu_item():
 # Can be customized to show all, only confirmed, or only completed orders.  
 # Note that the token is sent as a header.
 @app.get('/api/client-order')
-def get_client_order():
+def get_client_orders():
     return
 
 # Create a new order for a restaurant to see.  
@@ -138,7 +148,7 @@ def new_client_order():
 # Send no params if you want all orders associated with a restaurant regardless of status.
 # Note that the token is sent as a header.
 @app.get('/api/restaurant-order')
-def get_restaurant_order():
+def get_restaurant_orders():
     return
 
 # Modify an existing order.  
