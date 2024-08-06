@@ -45,7 +45,7 @@ def create_client():
         result = run_statement("CALL create_client(?, ?, ?, ?, ?, ?)", (email, first_name, last_name, image_url, username, password))
         if (result):
             token = new_token()
-            print(token)
+            # print(token)
             result2 = run_statement("CALL set_token(?,?)", (result[0]['id'], token))
             return make_response(jsonify(result2[0]), 200)
             # return make_response(jsonify([result[0], {"token": token}]), 200)
@@ -107,12 +107,40 @@ def delete_client():
 # Log a client in. Will error if the email / password don't exist in the system.
 @app.post('/api/client-login')
 def client_login():
-    return
+    valid_check = check_endpoint_info(request.json, ["username", "password"])
+    if(type(valid_check) == str):
+        return valid_check
+
+    username = request.json["username"]
+    password = request.json["password"]
+
+    try:
+        result = run_statement("CALL client_login(?, ?)", (username, password))
+        if (result):
+            token = new_token()
+            result2 = run_statement("CALL set_token(?,?)", (result[0]['id'], token))
+            return make_response(jsonify(result2[0]), 200)
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error updating client: {error}"
+        return make_response(jsonify(err), 400)
 
 # Delete an existing token. Will error if the token sent does not exist.
 @app.delete('/api/client-login')
 def client_logout():
-    return
+    valid_check = check_endpoint_info(request.headers,  ["token"])
+    if(type(valid_check) == str):
+        return valid_check
+    
+    token = request.headers["token"]
+    try:
+        result = run_statement("CALL client_logout(?)", (token))
+        if (result):
+            return make_response(None, 200)
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error updating client: {error}"
+        return make_response(jsonify(err), 400)
 
 # restaurant
 # Returns information about a single restaurant, will error if the restaurant_id does not exist.
