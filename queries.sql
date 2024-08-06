@@ -26,7 +26,7 @@ create table client (
 create table client_session (
     client_id int not null,
     token varchar(255) not null,
-    foreign key (client_id) references client(id)
+    foreign key (client_id) references client(id) on delete cascade
 );
 
 -- restaurant
@@ -187,7 +187,7 @@ begin
         END IF;
 
         COMMIT;
-
+        SELECT 'Success' AS message;
         
     END IF;
 end$$

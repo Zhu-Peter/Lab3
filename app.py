@@ -60,7 +60,7 @@ def create_client():
 @app.patch('/api/client')
 def update_client():
    
-    valid_check = check_endpoint_info(request.headers,  "token")
+    valid_check = check_endpoint_info(request.headers, ["token"])
     if(type(valid_check) == str):
         return valid_check
 
@@ -87,7 +87,7 @@ def update_client():
 # Delete an existing user if you have a valid token and password. Note that the token is sent as a header.
 @app.delete('/api/client')
 def delete_client():
-    valid_check = check_endpoint_info(request.headers,  "token")
+    valid_check = check_endpoint_info(request.headers,  ["token"])
     if(type(valid_check) == str):
         return valid_check
     
