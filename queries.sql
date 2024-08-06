@@ -319,9 +319,10 @@ DELIMITER ;
 -- DELETE
 DELIMITER $$
 $$
-create DEFINER=`root`@`localhost` procedure `delete_restaurant`(token_input varchar(255))
+create DEFINER=`root`@`localhost` procedure `delete_restaurant`(password_input varchar(255), token_input varchar(255))
 begin
     DECLARE token_id int;
+    DECLARE check_pwd varchar(255);
     select restaurant_id into token_id from restaurant_session where token = token_input;
 
     IF token_id IS NULL THEN
@@ -331,8 +332,15 @@ begin
         SELECT 'Invalid token' AS message;
 
     ELSE
-        DELETE FROM restaurant WHERE id = token_id;
-        COMMIT;
+        SELECT password INTO check_pwd FROM client WHERE id = token_id;
+
+        IF check_pwd!= password_input THEN
+            ROLLBACK;
+            SELECT 'Invalid password' AS message;
+        ELSE
+            DELETE FROM restaurant WHERE id = token_id;
+            COMMIT;
+        END IF;
     END IF;
 end$$
 DELIMITER ;

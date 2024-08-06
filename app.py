@@ -224,7 +224,21 @@ def update_restaurant():
 # Delete an existing restaurant if you have a valid token and password. Note that the token is sent as a header.
 @app.delete('/api/restaurant')
 def delete_restaurant():
-    return
+    valid_check = check_endpoint_info(request.headers,  ["token"])
+    if(type(valid_check) == str):
+        return valid_check
+    
+    password = request.json["password"]
+    token = request.headers["token"]
+    try:
+        result = run_statement("CALL delete_restaurant(?, ?)", (password, token))
+        if (result):
+            
+            return make_response(None, 200)
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error deleting restaurant: {error}"
+        return make_response(jsonify(err), 400)
 
 # Returns information about all restaurants.
 @app.get('/api/restaurants')
