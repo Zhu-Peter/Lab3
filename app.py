@@ -443,11 +443,11 @@ def new_client_order():
         response = run_statement("CALL new_client_order(?,?,?)", (token, id))
         order_id = response[0][id]
         for menu_item in menu_items:
-            run_statement("CALL add_menu_item_to_order(?,?,?)", (order_id, menu_item["id"]))
+            run_statement("CALL add_menu_item_to_order(?,?)", (order_id, menu_item))
         return make_response(jsonify({"order_id": order_id}), 200)
     except Exception as error:
         err = {}
-        err["error"] = f"Error getting client order: {error}"
+        err["error"] = f"Error adding client order: {error}"
         return make_response(jsonify(err), 400)
 
 # Returns all orders associated with a particular restaurant.  
@@ -485,6 +485,34 @@ def get_restaurant_orders():
 # Note that the token is sent as a header.
 @app.patch('/api/restaurant-order')
 def edit_restaurant_order():
-    return
+    valid_check = check_endpoint_info(request.headers, 
+                                      ["token"])
+    if(type(valid_check) == str):
+        return valid_check
 
+
+    valid_check = check_endpoint_info(request.json, 
+                                      ["order_id"])
+    if(type(valid_check) == str):
+        return valid_check
+    
+    token = request.headers["token"]
+    order_id = request.json["order_id"]
+
+    if(request.args.get("is_confirmed") != None):
+        is_confirmed = request.args.get("is_confirmed")
+    else:
+        is_confirmed = -1
+    if(request.args.get("is_complete") != None):
+        is_complete = request.args.get("is_complete")
+    else:
+        is_complete = -1
+    try:
+        run_statement("CALL patch_restaurant_order(?,?,?,?)", (token, order_id, is_confirmed, is_complete))
+        return make_response(None, 200)
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error getting restaurant order: {error}"
+        return make_response(jsonify(err), 400)
+    
 app.run(debug=True)

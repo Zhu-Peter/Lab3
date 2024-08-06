@@ -607,3 +607,39 @@ end$$
 DELIMITER ;
 
 -- PATCH
+DELIMITER $$
+$$
+create DEFINER=`root`@`localhost` procedure `patch_restaurant_orders`(token_input varchar(255), order_id_input int, is_confirmed int, is_complete int)
+begin
+    DECLARE token_id int;
+    select restaurant_id into token_id from restaurant_session where token = token_input;
+
+    IF token_id IS NULL THEN
+
+        ROLLBACK;
+
+        SELECT 'Invalid token' AS message;
+
+    ELSE
+        if is_complete = 0 THEN
+                UPDATE order SET is_complete = FALSE WHERE id = order_id_input;
+                commit;
+            else
+                if is_complete = 1 THEN
+                    UPDATE order SET is_complete = TRUE WHERE id = order_id_input;
+                    commit;
+                END IF;
+            END IF;
+        if is_confirmed = 0 THEN
+            UPDATE order SET is_confirmed = FALSE WHERE id = order_id_input;
+            commit;
+        else
+            if is_confirmed = 1 THEN
+                UPDATE order SET is_confirmed = TRUE WHERE id = order_id_input;
+                commit;
+            END IF;
+        END IF;
+    end if;
+    
+end$$
+DELIMITER ;
