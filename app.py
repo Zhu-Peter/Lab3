@@ -249,7 +249,7 @@ def get_restaurants():
             return make_response(jsonify(result), 200)
     except Exception as error:
         err = {}
-        err["error"] = f"Error calling client: {error}"
+        err["error"] = f"Error getting all restaurants: {error}"
         return make_response(jsonify(err), 400)
     
 # Log a restaurant in. Will error if the email / password don't exist in the system.
@@ -287,24 +287,90 @@ def restaurant_logout():
             return make_response(None, 200)
     except Exception as error:
         err = {}
-        err["error"] = f"Error logging out client: {error}"
+        err["error"] = f"Error logging out restaurant: {error}"
         return make_response(jsonify(err), 400)
 
 # Returns all menu items associated with a restaurant.
 @app.get('/api/menu')
 def get_menu_item():
-    return
+    valid_check = check_endpoint_info(request.args,  ["restaurant_id"])
+    if(type(valid_check) == str):
+        return valid_check
+    
+    id = request.args["restaurant_id"]
+
+    try:
+        result = run_statement("CALL get_menu_item(?)", (id))
+        if (result):
+            return make_response(jsonify(result), 200)
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error getting menu item: {error}"
+        return make_response(jsonify(err), 400)
 
 # Add a new menu item to a restaurant. Must be logged in as the restaurant to send the correct token.  
 # Note that the token is sent as a header.
 @app.post('/api/menu')
 def new_menu_item():
-    return
+    # description, image_url, name, price, restaurant_id
+    valid_check = check_endpoint_info(request.json, 
+                                      ["description", "image_url", "name", "price", "restaurant_id"])
+    if(type(valid_check) == str):
+        return valid_check
+    
+    valid_check = check_endpoint_info(request.headers, 
+                                      ["token"])
+    if(type(valid_check) == str):
+        return valid_check
+
+    description = request.json["description"]
+    image_url = request.json["image_url"]
+    name = request.json["name"]
+    price = request.json["price"]
+    restaurant_id = request.json["restaurant_id"]
+
+    token = request.headers["token"]
+
+    try:
+        result = run_statement("CALL new_menu_item(?,?,?,?,?,?)", (description, image_url, name, price, restaurant_id, token))
+        if (result):
+            return make_response(jsonify(result), 200)
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error creating menu item: {error}"
+        return make_response(jsonify(err), 400)
+
 
 # Modify an existing menu item if you have a valid token and menu_id. Note that the token is sent as a header.
 @app.patch('/api/menu')
 def edit_menu_item():
-    return
+    valid_check = check_endpoint_info(request.json, 
+                                      ["description", "image_url", "name", "price", "restaurant_id", "menu_id"])
+    if(type(valid_check) == str):
+        return valid_check
+    
+    valid_check = check_endpoint_info(request.headers, 
+                                      ["token"])
+    if(type(valid_check) == str):
+        return valid_check
+
+    description = request.json["description"]
+    image_url = request.json["image_url"]
+    name = request.json["name"]
+    price = request.json["price"]
+    restaurant_id = request.json["restaurant_id"]
+    menu_id = request.json["menu_id"]
+
+    token = request.headers["token"]
+
+    try:
+        result = run_statement("CALL edit_menu_item(?,?,?,?,?,?,?)", (description, image_url, name, price, restaurant_id, token, menu_id))
+        if (result):
+            return make_response(jsonify(result), 200)
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error creating menu item: {error}"
+        return make_response(jsonify(err), 400)
 
 # Delete an existing menu item if you have a valid token. Note that the token is sent as a header.
 @app.delete('/api/menu')
