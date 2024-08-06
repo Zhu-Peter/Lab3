@@ -26,7 +26,7 @@ create table client (
 create table client_session (
     client_id int not null,
     token varchar(255) not null,
-    foreign key (client_id) references client(id),
+    foreign key (client_id) references client(id)
 );
 
 -- restaurant
@@ -57,7 +57,7 @@ create table restaurant (
 create table restaurant_session (
     restaurant_id int not null,
     token varchar(255) not null,
-    foreign key (restaurant_id) references restaurant(restaurant_id)
+    foreign key (restaurant_id) references restaurant(id)
 );
 
 -- menu_item
@@ -79,7 +79,7 @@ create table menu_item (
 );
 
 -- order
-create table order (
+create table `order` (
     id int not null auto_increment,
     restaurant_id int not null,
     client_id int not null,
@@ -100,6 +100,26 @@ create table order_menu_item (
     foreign key (menu_item_id) references menu_item(id),
     primary key (id)
 );
+
+DELIMITER $$
+$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE lab3.set_token(input_id int, input_token varchar(255))
+begin
+	insert into lab3.client_session (client_id, token) values (input_id, input_token);
+	commit;
+END$$
+DELIMITER ;
+
+
+DELIMITER $$
+$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE lab3.set_token_restaurant(input_id int, input_token varchar(255))
+begin
+	insert into lab3.restaurant_session (restaurant_id_id, token) values (input_id, input_token);
+	commit;
+END$$
+DELIMITER ;
+
 
 -- CLIENT
 -- GET
@@ -176,9 +196,10 @@ DELIMITER ;
 -- DELETE
 DELIMITER $$
 $$
-create DEFINER=`root`@`localhost` procedure `delete_client`(token_input varchar(255))
+create DEFINER=`root`@`localhost` procedure `delete_client`(password_input varchar(255), token_input varchar(255))
 begin
     DECLARE token_id int;
+    DECLARE check_pwd varchar(255);
     select client_id into token_id from client_session where token = token_input;
 
     IF token_id IS NULL THEN
@@ -188,8 +209,15 @@ begin
         SELECT 'Invalid token' AS message;
 
     ELSE
-        DELETE FROM client WHERE id = token_id;
-        COMMIT;
+        SELECT password INTO check_pwd FROM client WHERE id = token_id;
+
+        IF check_pwd!= password_input THEN
+            ROLLBACK;
+            SELECT 'Invalid password' AS message;
+        ELSE
+            DELETE FROM client WHERE id = token_id;
+            COMMIT;
+        END IF;
     END IF;
 end$$
 DELIMITER ;
@@ -228,6 +256,7 @@ begin
     select id from restaurant where id = last_insert_id();
 end$$
 DELIMITER ;
+
 -- PATCH
 DELIMITER $$
 $$
@@ -286,6 +315,7 @@ begin
     END IF;
 end$$
 DELIMITER ;
+
 -- DELETE
 DELIMITER $$
 $$
@@ -390,6 +420,7 @@ begin
     END IF;
 end$$
 DELIMITER ;
+
 -- DELETE
 DELIMITER $$
 $$
@@ -409,9 +440,12 @@ begin
 
     ELSE
         delete from menu_item where id = menu_id_input and restaurant_id = token_id;
+        commit;
     end if;
 end$$
 DELIMITER ;
+
+
 -- ORDERS
 -- GET
 DELIMITER $$

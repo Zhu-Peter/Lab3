@@ -1,6 +1,12 @@
 import dbcreds
 import mariadb
+import secrets
 from flask import jsonify
+
+def new_token():
+  token = secrets.token_hex(16)
+
+  return token
 
 def connect_db():
   try:

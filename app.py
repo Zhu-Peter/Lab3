@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, make_response
-from dbhelpers import run_statement, check_endpoint_info
+from dbhelpers import run_statement, check_endpoint_info, new_token
 
 # import secrets
 # secrets.token_hex(16)
@@ -9,16 +9,18 @@ app = Flask(__name__)
 # Returns information about a single client, will error if the client_id does not exist.
 @app.get('/api/client')
 def get_client():
-    valid_check = check_endpoint_info(request.json, ["client_id"])
+    valid_check = check_endpoint_info(request.args, ["client_id"])
     if(type(valid_check) == str):
         return valid_check
     
     id = request.args["client_id"]
     
     try:
-        result = run_statement("CALL get_client(?)", (id))
+        result = run_statement("CALL get_client(?)", [id])
         if (result):
             return make_response(jsonify(result[0]), 200)
+        else:
+            return make_response("Client not found", 404)
     except Exception as error:
         err = {}
         err["error"] = f"Error calling client: {error}"
@@ -27,20 +29,77 @@ def get_client():
 # Creates a new client that can now use the system. Also returns a valid login token meaning the user is now logged in after sign up.  Will error if there is a duplicate username or password (the user already exists)
 @app.post('/api/client')
 def create_client():
+    valid_check = check_endpoint_info(request.json, 
+                                      ["email", "first_name", "last_name", "image_url", "username", "password"])
+    if(type(valid_check) == str):
+        return valid_check
 
-    # return client_id, token
-    return
+    email = request.json["email"]
+    first_name = request.json["first_name"]
+    last_name = request.json["last_name"]
+    image_url = request.json["image_url"]
+    username = request.json["username"]
+    password = request.json["password"]
+
+    try:
+        result = run_statement("CALL create_client(?, ?, ?, ?, ?, ?)", (email, first_name, last_name, image_url, username, password))
+        if (result):
+            token = new_token()
+            run_statement("INSERT INTO client_token (client_id, token) VALUES (?,?)", (result[0]['id'], token))
+            return make_response(jsonify([result[0], {"token": token}]), 200)
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error creating client: {error}"
+        return make_response(jsonify(err), 400)
+
 
 # Modify an existing user if you have a valid token. Note that the token is sent as a header.
 @app.patch('/api/client')
 def update_client():
-    
-    return
+   
+    valid_check = check_endpoint_info(request.headers,  "token")
+    if(type(valid_check) == str):
+        return valid_check
+
+    email = request.json["email"]
+    first_name = request.json["first_name"]
+    last_name = request.json["last_name"]
+    image_url = request.json["image_url"]
+    username = request.json["username"]
+    password = request.json["password"]
+
+    token = request.headers["token"]
+
+    try:
+        result = run_statement("CALL update_client(?, ?, ?, ?, ?, ?, ?)", (email, first_name, last_name, image_url, username, password, token))
+        if (result):
+            
+            return make_response(None, 200)
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error updating client: {error}"
+        return make_response(jsonify(err), 400)
+
 
 # Delete an existing user if you have a valid token and password. Note that the token is sent as a header.
 @app.delete('/api/client')
 def delete_client():
-    return
+    valid_check = check_endpoint_info(request.headers,  "token")
+    if(type(valid_check) == str):
+        return valid_check
+    
+    password = request.json["password"]
+    token = request.headers["token"]
+    try:
+        result = run_statement("CALL delete_client(?, ?)", (password, token))
+        if (result):
+            
+            return make_response(None, 200)
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error calling client: {error}"
+        return make_response(jsonify(err), 400)
+
 
 # Log a client in. Will error if the email / password don't exist in the system.
 @app.post('/api/client-login')
@@ -158,3 +217,5 @@ def get_restaurant_orders():
 @app.patch('/api/restaurant-order')
 def edit_restaurant_order():
     return
+
+app.run(debug=True)
