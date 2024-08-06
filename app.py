@@ -45,8 +45,11 @@ def create_client():
         result = run_statement("CALL create_client(?, ?, ?, ?, ?, ?)", (email, first_name, last_name, image_url, username, password))
         if (result):
             token = new_token()
-            run_statement("INSERT INTO client_token (client_id, token) VALUES (?,?)", (result[0]['id'], token))
-            return make_response(jsonify([result[0], {"token": token}]), 200)
+            print(token)
+            result2 = run_statement("CALL set_token(?,?)", (result[0]['id'], token))
+            return make_response(jsonify(result2[0]), 200)
+            # return make_response(jsonify([result[0], {"token": token}]), 200)
+
     except Exception as error:
         err = {}
         err["error"] = f"Error creating client: {error}"
