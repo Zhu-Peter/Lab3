@@ -100,7 +100,7 @@ def delete_client():
             return make_response(None, 200)
     except Exception as error:
         err = {}
-        err["error"] = f"Error calling client: {error}"
+        err["error"] = f"Error deleting client: {error}"
         return make_response(jsonify(err), 400)
 
 
@@ -122,7 +122,7 @@ def client_login():
             return make_response(jsonify(result2[0]), 200)
     except Exception as error:
         err = {}
-        err["error"] = f"Error updating client: {error}"
+        err["error"] = f"Error logging in client: {error}"
         return make_response(jsonify(err), 400)
 
 # Delete an existing token. Will error if the token sent does not exist.
@@ -139,7 +139,7 @@ def client_logout():
             return make_response(None, 200)
     except Exception as error:
         err = {}
-        err["error"] = f"Error updating client: {error}"
+        err["error"] = f"Error logging out client: {error}"
         return make_response(jsonify(err), 400)
 
 # restaurant
@@ -150,10 +150,10 @@ def get_restaurant():
     if(type(valid_check) == str):
         return valid_check
     
-    id = request.args["restaurant_id"]
+    id = request.json["restaurant_id"]
     
     try:
-        result = run_statement("CALL get_client(?)", (id))
+        result = run_statement("CALL get_restaurant(?)", (id))
         if (result):
             return make_response(jsonify(result[0]), 200)
     except Exception as error:
@@ -164,12 +164,62 @@ def get_restaurant():
 # Creates a new restaurant that can now use the system. Also returns a valid login token meaning the restaurant is now logged in after sign up. Will error if there is a duplicate email or phone number(the user already exists)
 @app.post('/api/restaurant')
 def create_restaurant():
-    return
+    # name, address, phone, email, bio, city, profile_url, banner_url, password
+    valid_check = check_endpoint_info(request.json, ["name", "address", "phone", "email", "bio", "city", "profile_url", "banner_url", "password"])
+    if(type(valid_check) == str):
+        return valid_check
+
+    name = request.json["name"]
+    address = request.json["address"]
+    phone = request.json["phone"]
+    email = request.json["email"]
+    bio = request.json["bio"]
+    city = request.json["city"]
+    profile_url = request.json["profile_url"]
+    banner_url = request.json["banner_url"]
+    password = request.json["password"]
+
+    try:
+        result = run_statement("CALL create_restaurant(?,?,?,?,?,?,?,?,?)", (name, address, phone, email, bio, city, profile_url, banner_url, password))
+        if (result):
+            token = new_token()
+            result2 = run_statement("CALL set_token_restaurant(?,?)", (result[0]['id'], token))
+            return make_response(jsonify(result2[0]), 200)
+            # return make_response(jsonify([result[0], {"token": token}]), 200)
+
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error creating restaurant: {error}"
+        return make_response(jsonify(err), 400)
 
 # Modify an existing restaurant if you have a valid token. Note that the token is sent as a header.
 @app.patch('/api/restaurant')
 def update_restaurant():
-    return
+    valid_check = check_endpoint_info(request.headers.get("token"))
+    if(type(valid_check) == str):
+        return valid_check
+    name = request.json["name"]
+    address = request.json["address"]
+    phone = request.json["phone"]
+    email = request.json["email"]
+    bio = request.json["bio"]
+    city = request.json["city"]
+    profile_url = request.json["profile_url"]
+    banner_url = request.json["banner_url"]
+    password = request.json["password"]
+
+    token = request.headers["token"]
+
+    try:
+        result = run_statement("CALL update_restaurant(?,?,?,?,?,?,?,?,?,?)", (name, address, phone, email, bio, city, profile_url, banner_url, password, token))
+        if (result):
+            
+            return make_response(None, 200)
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error updating client: {error}"
+        return make_response(jsonify(err), 400)
+
 
 # Delete an existing restaurant if you have a valid token and password. Note that the token is sent as a header.
 @app.delete('/api/restaurant')
