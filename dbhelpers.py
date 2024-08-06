@@ -23,22 +23,21 @@ def execute_statement(cursor, statement, args = []):
     cursor.execute(statement, args)
     try:
       results = cursor.fetchall()
-      if (results != None):
+      print(results == None)
+      if (results != []):
         column_names = [desc[0] for desc in cursor.description] 
         records = [dict(zip(column_names, row)) for row in results]
         return records
-    except mariadb.Error as error:
-      if error == "Cursor doesn't have a result set":
-        pass
-      else:
-        raise error
+    except mariadb.ProgrammingError as error:
+      for msg in error.args:
+        if msg == "Cursor doesn't have a result set":
+          exit()
+        else:
+          raise error
 
   except mariadb.ProgrammingError as error:
-    if error == "Cursor doesn't have a result set":
-      pass
-    else:
-      print("PROGRAMMING ERROR:", error)
-      raise error
+    print("PROGRAMMING ERROR:", error)
+    raise error
   except mariadb.IntegrityError as error:
     print("INTEGRITY ERROR:", error)
     raise error
