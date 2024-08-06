@@ -96,7 +96,7 @@ create table order_menu_item (
     order_id int not null,
     menu_item_id int not null,
     quantity int not null default 1,
-    foreign key (order_id) references order(id) on delete cascade,
+    foreign key (order_id) references `order`(id) on delete cascade,
     foreign key (menu_item_id) references menu_item(id) on delete cascade,
     primary key (id)
 );
@@ -354,7 +354,7 @@ create procedure restaurant_logout(token_input varchar(255))
     delete from restaurant_session where token = token_input;
 
 -- GET ALL RESTAURANTS
-create procedure get_restaurants
+create procedure get_restaurants()
     select * from restaurant;
 
 -- MENU
@@ -640,6 +640,6 @@ begin
             END IF;
         END IF;
     end if;
-    
+
 end$$
 DELIMITER ;
