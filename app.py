@@ -443,8 +443,17 @@ def get_restaurant_orders():
         return valid_check
 
     token = request.headers["token"]
+
+    if(request.args.get("is_confirmed") != None):
+        is_confirmed = request.args.get("is_confirmed")
+    else:
+        is_confirmed = -1
+    if(request.args.get("is_complete") != None):
+        is_complete = request.args.get("is_complete")
+    else:
+        is_complete = -1
     try:
-        response = run_statement("CALL get_restaurant_order(?)", (token))
+        response = run_statement("CALL get_restaurant_order(?,?,?)", (token, is_confirmed, is_complete))
         return make_response(response, 200)
     except Exception as error:
         err = {}
