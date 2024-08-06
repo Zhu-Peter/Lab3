@@ -464,7 +464,7 @@ DELIMITER ;
 -- GET
 DELIMITER $$
 $$
-create DEFINER=`root`@`localhost` procedure `get_client_orders`(token_input varchar(255))
+create DEFINER=`root`@`localhost` procedure `get_client_orders`(token_input varchar(255), is_confirmed int, is_complete int)
 begin
     DECLARE token_id int;
     select client_id into token_id from client_session where token = token_input;
@@ -476,8 +476,48 @@ begin
         SELECT 'Invalid token' AS message;
 
     ELSE
+    -- is_confirmed, is_complete = 1 means confirmed and complete orders
+        -- is_confirmed, is_complete = 0 means not confirmed or not complete orders
+        -- is_confirmed, is_complete = -1 means no filter
 
-    select * from order_item where client_id = token_id;
+        IF is_complete = -1 then 
+            if is_confirmed = -1 THEN
+                SELECT * FROM order_item WHERE client_id = token_id;
+            else
+                if is_confirmed = 1 THEN
+                    SELECT * FROM order_item WHERE client_id = token_id AND is_confirmed = 1;
+                else
+                    SELECT * FROM order_item WHERE client_id = token_id AND is_confirmed = 0;
+                END IF;
+            END IF;
+        else
+            if is_complete = 0 THEN
+                if is_confirmed = -1 THEN
+                    SELECT * FROM order_item WHERE client_id = token_id AND is_complete = 0;
+                else
+                    if is_confirmed = 1 THEN
+                        SELECT * FROM order_item WHERE client_id = token_id AND is_complete = 0 AND is_confirmed = 1;
+                    else
+                        SELECT * FROM order_item WHERE client_id = token_id AND is_complete = 0 AND is_confirmed = 0;
+                    END IF;
+                END IF;
+            else
+                if is_complete = 1 THEN
+                    if is_confirmed = -1 THEN
+                        SELECT * FROM order_item WHERE client_id = token_id AND is_complete = 1;
+                    else
+                        if is_confirmed = 1 THEN
+                            SELECT * FROM order_item WHERE client_id = token_id AND is_complete = 1 AND is_confirmed = 1;
+                        else
+                            SELECT * FROM order_item WHERE client_id = token_id AND is_complete = 1 AND is_confirmed = 0;
+                        END IF;
+                    END IF;
+                END IF;
+            END IF;
+        END IF;
+       
+    END IF;
+    
 end$$
 DELIMITER ;
 
