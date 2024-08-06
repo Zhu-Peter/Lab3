@@ -441,8 +441,10 @@ def new_client_order():
 
     try:
         response = run_statement("CALL new_client_order(?,?,?)", (token, id))
-        order_id = response[0][order_id]
-        return make_response(response, 200)
+        order_id = response[0][id]
+        for menu_item in menu_items:
+            run_statement("CALL add_menu_item_to_order(?,?,?)", (order_id, menu_item["id"]))
+        return make_response(jsonify({"order_id": order_id}), 200)
     except Exception as error:
         err = {}
         err["error"] = f"Error getting client order: {error}"

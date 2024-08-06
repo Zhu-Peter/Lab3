@@ -480,34 +480,34 @@ begin
 
         IF is_complete = -1 then 
             if is_confirmed = -1 THEN
-                SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE client_id = token_id;
+                SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE client_id = token_id;
             else
                 if is_confirmed = 1 THEN
-                    SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE client_id = token_id AND is_confirmed = 1;
+                    SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE client_id = token_id AND is_confirmed = 1;
                 else
-                    SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE client_id = token_id AND is_confirmed = 0;
+                    SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE client_id = token_id AND is_confirmed = 0;
                 END IF;
             END IF;
         else
             if is_complete = 0 THEN
                 if is_confirmed = -1 THEN
-                    SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE client_id = token_id AND is_complete = 0;
+                    SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE client_id = token_id AND is_complete = 0;
                 else
                     if is_confirmed = 1 THEN
-                        SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE client_id = token_id AND is_complete = 0 AND is_confirmed = 1;
+                        SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE client_id = token_id AND is_complete = 0 AND is_confirmed = 1;
                     else
-                        SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE client_id = token_id AND is_complete = 0 AND is_confirmed = 0;
+                        SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE client_id = token_id AND is_complete = 0 AND is_confirmed = 0;
                     END IF;
                 END IF;
             else
                 if is_complete = 1 THEN
                     if is_confirmed = -1 THEN
-                        SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE client_id = token_id AND is_complete = 1;
+                        SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE client_id = token_id AND is_complete = 1;
                     else
                         if is_confirmed = 1 THEN
-                            SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE client_id = token_id AND is_complete = 1 AND is_confirmed = 1;
+                            SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE client_id = token_id AND is_complete = 1 AND is_confirmed = 1;
                         else
-                            SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE client_id = token_id AND is_complete = 1 AND is_confirmed = 0;
+                            SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE client_id = token_id AND is_complete = 1 AND is_confirmed = 0;
                         END IF;
                     END IF;
                 END IF;
@@ -542,6 +542,15 @@ begin
 end$$
 DELIMITER ;
 
+DELIMITER $$
+$$
+create DEFINER=`root`@`localhost` procedure `new_order_item`(order_id_input int, item_id_input int, quantity_input int)
+begin
+    insert into order_menu_item (order_id, item_id) values (order_id_input, item_id_input);
+    commit;
+end$$
+DELIMITER ;
+
 -- RESTAURANT ORDERS
 -- GET
 DELIMITER $$
@@ -561,34 +570,34 @@ begin
 
         IF is_complete = -1 then 
             if is_confirmed = -1 THEN
-                SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE restaurant_id = token_id;
+                SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE restaurant_id = token_id;
             else
                 if is_confirmed = 1 THEN
-                    SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE restaurant_id = token_id AND is_confirmed = 1;
+                    SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE restaurant_id = token_id AND is_confirmed = 1;
                 else
-                    SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE restaurant_id = token_id AND is_confirmed = 0;
+                    SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE restaurant_id = token_id AND is_confirmed = 0;
                 END IF;
             END IF;
         else
             if is_complete = 0 THEN
                 if is_confirmed = -1 THEN
-                    SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE restaurant_id = token_id AND is_complete = 0;
+                    SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE restaurant_id = token_id AND is_complete = 0;
                 else
                     if is_confirmed = 1 THEN
-                        SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE restaurant_id = token_id AND is_complete = 0 AND is_confirmed = 1;
+                        SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE restaurant_id = token_id AND is_complete = 0 AND is_confirmed = 1;
                     else
-                        SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE restaurant_id = token_id AND is_complete = 0 AND is_confirmed = 0;
+                        SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE restaurant_id = token_id AND is_complete = 0 AND is_confirmed = 0;
                     END IF;
                 END IF;
             else
                 if is_complete = 1 THEN
                     if is_confirmed = -1 THEN
-                        SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE restaurant_id = token_id AND is_complete = 1;
+                        SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE restaurant_id = token_id AND is_complete = 1;
                     else
                         if is_confirmed = 1 THEN
-                            SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE restaurant_id = token_id AND is_complete = 1 AND is_confirmed = 1;
+                            SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE restaurant_id = token_id AND is_complete = 1 AND is_confirmed = 1;
                         else
-                            SELECT * FROM order JOIN menu_item ON order.menu_item_id = menu_item.id WHERE restaurant_id = token_id AND is_complete = 1 AND is_confirmed = 0;
+                            SELECT * FROM order JOIN order_menu_item ON order.id = order_menu_item.order_id WHERE restaurant_id = token_id AND is_complete = 1 AND is_confirmed = 0;
                         END IF;
                     END IF;
                 END IF;
