@@ -81,14 +81,12 @@ create table menu_item (
 -- order
 create table `order` (
     id int not null auto_increment,
-    menu_id int not null,
     restaurant_id int not null,
     client_id int not null,
     is_confirmed boolean not null default false,
     is_complete boolean not null default false,
     foreign key (restaurant_id) references restaurant(id) on delete cascade,
     foreign key (client_id) references client(id) on delete cascade,
-    foreign key (menu_id) references menu_item(id) on delete cascade,
     primary key (id)
 );
 
@@ -524,7 +522,7 @@ DELIMITER ;
 -- POST
 DELIMITER $$
 $$
-create DEFINER=`root`@`localhost` procedure `new_client_orders`(orders_input varchar(500), token_input varchar(255), restaurant_id_input int)
+create DEFINER=`root`@`localhost` procedure `new_client_order`(token_input varchar(255), restaurant_id_input int)
 begin
     DECLARE token_id int;
     select client_id into token_id from client_session where token = token_input;
@@ -536,7 +534,10 @@ begin
         SELECT 'Invalid token' AS message;
 
     ELSE
-        -- 
+        insert into order (client_id, restaurant_id) values (token_id, restaurant_id_input);
+        commit;
+        select id from order where id = LAST_INSERT_ID();
+    END IF;
     
 end$$
 DELIMITER ;

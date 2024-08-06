@@ -429,7 +429,24 @@ def get_client_orders():
 # Note that the token is sent as a header.
 @app.post('/api/client-order')
 def new_client_order():
-    return
+    valid_check = check_endpoint_info(request.headers, 
+                                      ["token"])
+    if(type(valid_check) == str):
+        return valid_check
+    
+    token = request.headers["token"]
+
+    menu_items = request.json["menu_items"]
+    id = request.json["id"]
+
+    try:
+        response = run_statement("CALL new_client_order(?,?,?)", (token, id))
+        order_id = response[0][order_id]
+        return make_response(response, 200)
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error getting client order: {error}"
+        return make_response(jsonify(err), 400)
 
 # Returns all orders associated with a particular restaurant.  
 # Can be customized to show all, only confirmed, or only completed orders.  
