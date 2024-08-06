@@ -57,7 +57,7 @@ create table restaurant (
 create table restaurant_session (
     restaurant_id int not null,
     token varchar(255) not null,
-    foreign key (restaurant_id) references restaurant(id)
+    foreign key (restaurant_id) references restaurant(id) on delete cascade
 );
 
 -- menu_item
@@ -74,19 +74,21 @@ create table menu_item (
     price decimal(10,2) not null,
     image_url varchar(255) not null,
     primary key (id),
-    foreign key (restaurant_id) references restaurant(id)
+    foreign key (restaurant_id) references restaurant(id) on delete cascade
 
 );
 
 -- order
 create table `order` (
     id int not null auto_increment,
+    menu_id int not null,
     restaurant_id int not null,
     client_id int not null,
     is_confirmed boolean not null default false,
     is_complete boolean not null default false,
-    foreign key (restaurant_id) references restaurant(id),
-    foreign key (client_id) references client(id),
+    foreign key (restaurant_id) references restaurant(id) on delete cascade,
+    foreign key (client_id) references client(id) on delete cascade,
+    foreign key (menu_id) references menu_item(id) on delete cascade,
     primary key (id)
 );
 
@@ -96,8 +98,8 @@ create table order_menu_item (
     order_id int not null,
     menu_item_id int not null,
     quantity int not null default 1,
-    foreign key (order_id) references order(id),
-    foreign key (menu_item_id) references menu_item(id),
+    foreign key (order_id) references order(id) on delete cascade,
+    foreign key (menu_item_id) references menu_item(id) on delete cascade,
     primary key (id)
 );
 
@@ -480,7 +482,24 @@ end$$
 DELIMITER ;
 
 -- POST
+DELIMITER $$
+$$
+create DEFINER=`root`@`localhost` procedure `new_client_orders`(orders_input varchar(500), token_input varchar(255), restaurant_id_input int)
+begin
+    DECLARE token_id int;
+    select client_id into token_id from client_session where token = token_input;
 
+    IF token_id IS NULL THEN
+
+        ROLLBACK;
+
+        SELECT 'Invalid token' AS message;
+
+    ELSE
+        -- 
+    
+end$$
+DELIMITER ;
 
 -- RESTAURANT ORDERS
 -- GET
