@@ -399,7 +399,30 @@ def delete_menu_item():
 # Note that the token is sent as a header.
 @app.get('/api/client-order')
 def get_client_orders():
-    return
+    valid_check = check_endpoint_info(request.headers, 
+                                      ["token"])
+    if(type(valid_check) == str):
+        return valid_check
+
+    token = request.headers["token"]
+
+    if(request.args.get("is_confirmed") != None):
+        is_confirmed = request.args.get("is_confirmed")
+    else:
+        is_confirmed = -1
+    if(request.args.get("is_complete") != None):
+        is_complete = request.args.get("is_complete")
+    else:
+        is_complete = -1
+        
+    try:
+        response = run_statement("CALL get_client_order(?,?,?)", (token, is_confirmed, is_complete))
+        return make_response(response, 200)
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error getting client order: {error}"
+        return make_response(jsonify(err), 400)
+
 
 # Create a new order for a restaurant to see.  
 # Note that one order must be associated with one restaurant only.  
@@ -414,7 +437,19 @@ def new_client_order():
 # Note that the token is sent as a header.
 @app.get('/api/restaurant-order')
 def get_restaurant_orders():
-    return
+    valid_check = check_endpoint_info(request.headers, 
+                                      ["token"])
+    if(type(valid_check) == str):
+        return valid_check
+
+    token = request.headers["token"]
+    try:
+        response = run_statement("CALL get_restaurant_order(?)", (token))
+        return make_response(response, 200)
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error getting restaurant order: {error}"
+        return make_response(jsonify(err), 400)
 
 # Modify an existing order.  
 # Orders can be confirmed and then completed only by the restaurant associated with the order.  
