@@ -349,6 +349,10 @@ DELIMITER ;
 create procedure restaurant_login(email_input varchar(255), password_input varchar(255))
     select id from restaurant where email = email_input and password = password_input;
 
+-- LOGOUT
+create procedure restaurant_logout(token_input varchar(255))
+    delete from restaurant_session where token = token_input;
+
 -- GET ALL RESTAURANTS
 create procedure get_restaurants
     select * from restaurant;

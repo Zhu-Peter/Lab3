@@ -255,12 +255,40 @@ def get_restaurants():
 # Log a restaurant in. Will error if the email / password don't exist in the system.
 @app.post('/api/restaurant-login')
 def restaurant_login():
-    return
+    valid_check = check_endpoint_info(request.json, ["email", "password"])
+    if(type(valid_check) == str):
+        return valid_check
+
+    username = request.json["email"]
+    password = request.json["password"]
+
+    try:
+        result = run_statement("CALL restaurant_login(?, ?)", (username, password))
+        if (result):
+            token = new_token()
+            result2 = run_statement("CALL set_token_restaurant(?,?)", (result[0]['id'], token))
+            return make_response(jsonify(result2[0]), 200)
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error logging in restaurant: {error}"
+        return make_response(jsonify(err), 400)
 
 # Delete an existing token. Will error if the token sent does not exist.
 @app.delete('/api/restaurant-login')
 def restaurant_logout():
-    return
+    valid_check = check_endpoint_info(request.headers,  ["token"])
+    if(type(valid_check) == str):
+        return valid_check
+    
+    token = request.headers["token"]
+    try:
+        result = run_statement("CALL restaurant_logout(?)", (token))
+        if (result):
+            return make_response(None, 200)
+    except Exception as error:
+        err = {}
+        err["error"] = f"Error logging out client: {error}"
+        return make_response(jsonify(err), 400)
 
 # Returns all menu items associated with a restaurant.
 @app.get('/api/menu')
