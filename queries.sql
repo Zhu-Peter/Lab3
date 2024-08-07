@@ -567,9 +567,9 @@ DELIMITER ;
 
 DELIMITER $$
 $$
-create DEFINER=`root`@`localhost` procedure `new_order_item`(order_id_input int, item_id_input int, quantity_input int)
+create DEFINER=`root`@`localhost` procedure `new_order_item`(order_id_input int, item_id_input int)
 begin
-    insert into order_menu_item (order_id, item_id) values (order_id_input, item_id_input);
+    insert into order_menu_item (order_id, item_id) values (order_id_input, menu_item_id_input);
     commit;
     SELECT 'Success' AS message;
 end$$
@@ -649,19 +649,23 @@ begin
         if is_complete = 0 THEN
                 UPDATE `order` SET is_complete = FALSE WHERE id = order_id_input;
                 commit;
+                select "Success" as message;
             else
                 if is_complete = 1 THEN
                     UPDATE `order` SET is_complete = TRUE WHERE id = order_id_input;
                     commit;
+                    select "Success" as message;
                 END IF;
             END IF;
         if is_confirmed = 0 THEN
             UPDATE `order` SET is_confirmed = FALSE WHERE id = order_id_input;
             commit;
+            select "Success" as message;
         else
             if is_confirmed = 1 THEN
                 UPDATE `order` SET is_confirmed = TRUE WHERE id = order_id_input;
                 commit;
+                select "Success" as message;
             END IF;
         END IF;
     end if;

@@ -63,14 +63,22 @@ def update_client():
     valid_check = check_endpoint_info(request.headers, ["token"])
     if(type(valid_check) == str):
         return valid_check
+    
+    email = first_name = last_name = image_url = username = password = ""
 
-    email = request.json["email"]
-    first_name = request.json["first_name"]
-    last_name = request.json["last_name"]
-    image_url = request.json["image_url"]
-    username = request.json["username"]
-    password = request.json["password"]
-
+    if(request.json.get("email") is not None):
+        email = request.json["email"]
+    if(request.json.get("first_name") is not None):
+        first_name = request.json["first_name"]
+    if(request.json.get("last_name") is not None):
+        last_name = request.json["last_name"]
+    if(request.json.get("image_url") is not None):
+        image_url = request.json["image_url"]
+    if(request.json.get("username") is not None):
+        username = request.json["username"]
+    if(request.json.get("password") is not None):
+        password = request.json["password"]
+        
     token = request.headers["token"]
 
     try:
@@ -170,15 +178,26 @@ def create_restaurant():
     if(type(valid_check) == str):
         return valid_check
 
-    name = request.json["name"]
-    address = request.json["address"]
-    phone = request.json["phone_number"]
-    email = request.json["email"]
-    bio = request.json["bio"]
-    city = request.json["city"]
-    profile_url = request.json["profile_url"]
-    banner_url = request.json["banner_url"]
-    password = request.json["password"]
+    name = address = phone = email = bio = city = profile_url = banner_url = password = ""
+
+    if(request.json.get("name") is not None):
+        name = request.json["name"]
+    if(request.json.get("address") is not None):
+        address = request.json["address"]
+    if(request.json.get("phone_number") is not None):
+        phone = request.json["phone_number"]
+    if(request.json.get("email") is not None):
+        email = request.json["email"]
+    if(request.json.get("bio") is not None):
+        bio = request.json["bio"]
+    if(request.json.get("city") is not None):
+        city = request.json["city"]
+    if(request.json.get("profile_url") is not None):
+        profile_url = request.json["profile_url"]
+    if(request.json.get("banner_url") is not None):
+        banner_url = request.json["banner_url"]
+    if(request.json.get("password") is not None):
+        password = request.json["password"]
 
     try:
         result = run_statement("CALL create_restaurant(?,?,?,?,?,?,?,?,?)", (name, address, phone, email, bio, city, profile_url, banner_url, password))
@@ -365,8 +384,11 @@ def edit_menu_item():
     token = request.headers["token"]
 
     try:
-        run_statement("CALL edit_menu_item(?,?,?,?,?,?)", (description, image_url, name, int(price), token, menu_id))
-        return make_response('', 200)
+        response = run_statement("CALL edit_menu_item(?,?,?,?,?,?)", (description, image_url, name, int(price), token, menu_id))
+        if (response[0]["message"] == "Success"):
+            return make_response('', 200)
+        else:
+            return make_response("Error editing menu item: " + response[0]["message"], 400)
     except Exception as error:
         err = {}
         err["error"] = f"Error editing menu item: {error}"
@@ -389,8 +411,12 @@ def delete_menu_item():
     token = request.headers["token"]
 
     try:
-        run_statement("CALL delete_menu_item(?,?)", (token, id))
-        return make_response('', 200)
+        response = run_statement("CALL delete_menu_item(?,?)", (token, id))
+        if (response[0]["message"] == "Success"):
+            return make_response('', 200)
+        else:
+            return make_response("Error editing menu item: " + response[0]["message"], 400)
+
     except Exception as error:
         err = {}
         err["error"] = f"Error editing menu item: {error}"
@@ -418,7 +444,7 @@ def get_client_orders():
         is_complete = -1
         
     try:
-        response = run_statement("CALL get_client_order(?,?,?)", (token, is_confirmed, is_complete))
+        response = run_statement("CALL get_client_orders(?,?,?)", (token, is_confirmed, is_complete))
         return make_response(jsonify(response), 200)
     except Exception as error:
         err = {}
@@ -439,13 +465,14 @@ def new_client_order():
     token = request.headers["token"]
 
     menu_items = request.json["menu_items"]
-    id = request.json["id"]
+    
+    id = request.json["restaurant_id"]
 
     try:
-        response = run_statement("CALL new_client_order(?,?,?)", (token, id))
-        order_id = response[0][id]
+        response = run_statement("CALL new_client_order(?,?)", (token, int(id)))
+        order_id = response[0]["id"]
         for menu_item in menu_items:
-            run_statement("CALL add_menu_item_to_order(?,?)", (order_id, menu_item))
+            run_statement("CALL new_order_item(?,?)", (order_id, menu_item))
         return make_response(jsonify({"order_id": order_id}), 200)
     except Exception as error:
         err = {}
@@ -474,7 +501,7 @@ def get_restaurant_orders():
     else:
         is_complete = -1
     try:
-        response = run_statement("CALL get_restaurant_order(?,?,?)", (token, is_confirmed, is_complete))
+        response = run_statement("CALL get_restaurant_orders(?,?,?)", (token, is_confirmed, is_complete))
         return make_response(jsonify(response), 200)
     except Exception as error:
         err = {}
@@ -501,17 +528,23 @@ def edit_restaurant_order():
     token = request.headers["token"]
     order_id = request.json["order_id"]
 
-    if(request.args.get("is_confirmed") != None):
-        is_confirmed = request.args.get("is_confirmed")
+    if(request.json.get("is_confirmed") != None):
+        is_confirmed = request.json.get("is_confirmed")
     else:
         is_confirmed = -1
-    if(request.args.get("is_complete") != None):
-        is_complete = request.args.get("is_complete")
+    if(request.json.get("is_complete") != None):
+        is_complete = request.json.get("is_complete")
     else:
         is_complete = -1
+
+    print(is_complete, is_confirmed)
     try:
-        run_statement("CALL patch_restaurant_order(?,?,?,?)", (token, order_id, is_confirmed, is_complete))
-        return make_response(None, 200)
+        response = run_statement("CALL patch_restaurant_orders(?,?,?,?)", (token, order_id, is_confirmed, is_complete))
+        if (response[0]["message"] == "Success"):
+            return make_response('', 200)
+        else:
+            return make_response("Error editing order: " + response[0]["message"], 400)
+
     except Exception as error:
         err = {}
         err["error"] = f"Error getting restaurant order: {error}"
