@@ -147,14 +147,14 @@ def client_logout():
 # Returns information about a single restaurant, will error if the restaurant_id does not exist.
 @app.get('/api/restaurant')
 def get_restaurant():
-    valid_check = check_endpoint_info(request.json, ["restaurant_id"])
+    valid_check = check_endpoint_info(request.args, ["restaurant_id"])
     if(type(valid_check) == str):
         return valid_check
     
-    id = request.json["restaurant_id"]
+    id = request.args["restaurant_id"]
     
     try:
-        result = run_statement("CALL get_restaurant(?)", (id))
+        result = run_statement("CALL get_restaurant(?)", [id])
         if (result):
             return make_response(jsonify(result[0]), 200)
     except Exception as error:
@@ -166,13 +166,13 @@ def get_restaurant():
 @app.post('/api/restaurant')
 def create_restaurant():
     # name, address, phone, email, bio, city, profile_url, banner_url, password
-    valid_check = check_endpoint_info(request.json, ["name", "address", "phone", "email", "bio", "city", "profile_url", "banner_url", "password"])
+    valid_check = check_endpoint_info(request.json, ["name", "address", "phone_number", "email", "bio", "city", "profile_url", "banner_url", "password"])
     if(type(valid_check) == str):
         return valid_check
 
     name = request.json["name"]
     address = request.json["address"]
-    phone = request.json["phone"]
+    phone = request.json["phone_number"]
     email = request.json["email"]
     bio = request.json["bio"]
     city = request.json["city"]
@@ -196,12 +196,12 @@ def create_restaurant():
 # Modify an existing restaurant if you have a valid token. Note that the token is sent as a header.
 @app.patch('/api/restaurant')
 def update_restaurant():
-    valid_check = check_endpoint_info(request.headers.get("token"))
+    valid_check = check_endpoint_info(request.headers, ["token"])
     if(type(valid_check) == str):
         return valid_check
     name = request.json["name"]
     address = request.json["address"]
-    phone = request.json["phone"]
+    phone = request.json["phone_number"]
     email = request.json["email"]
     bio = request.json["bio"]
     city = request.json["city"]
@@ -230,8 +230,11 @@ def delete_restaurant():
     password = request.json["password"]
     token = request.headers["token"]
     try:
-        run_statement("CALL delete_restaurant(?, ?)", (password, token))
-        return make_response('', 200)
+        response = run_statement("CALL delete_restaurant(?, ?)", (password, token))
+        if (response[0]["message"] == "Success"):
+            return make_response('', 200)
+        else:
+            return make_response("Error deleting restaurant: " + response[0]["message"], 400)
     except Exception as error:
         err = {}
         err["error"] = f"Error deleting restaurant: {error}"
@@ -242,8 +245,7 @@ def delete_restaurant():
 def get_restaurants():
     try:
         result = run_statement("CALL get_restaurants()")
-        if (result):
-            return make_response(jsonify(result), 200)
+        return make_response(jsonify(result), 200)
     except Exception as error:
         err = {}
         err["error"] = f"Error getting all restaurants: {error}"
@@ -279,8 +281,11 @@ def restaurant_logout():
     
     token = request.headers["token"]
     try:
-        run_statement("CALL restaurant_logout(?)", (token))
-        return make_response('', 200)
+        response = run_statement("CALL restaurant_logout(?)", [token])
+        if (response[0]["message"] == "Success"):
+            return make_response('', 200)
+        else:
+            return make_response(response[0]["message"], 400)
     except Exception as error:
         err = {}
         err["error"] = f"Error logging out restaurant: {error}"
@@ -296,8 +301,8 @@ def get_menu_item():
     id = request.args["restaurant_id"]
 
     try:
-        result = run_statement("CALL get_menu_item(?)", (id))
-        if (result):
+        result = run_statement("CALL get_menu_item(?)", [id])
+        if (type(result) == list):
             return make_response(jsonify(result), 200)
     except Exception as error:
         err = {}
@@ -310,7 +315,7 @@ def get_menu_item():
 def new_menu_item():
     # description, image_url, name, price, restaurant_id
     valid_check = check_endpoint_info(request.json, 
-                                      ["description", "image_url", "name", "price", "restaurant_id"])
+                                      ["description", "image_url", "name", "price"])
     if(type(valid_check) == str):
         return valid_check
     
@@ -323,13 +328,15 @@ def new_menu_item():
     image_url = request.json["image_url"]
     name = request.json["name"]
     price = request.json["price"]
-    restaurant_id = request.json["restaurant_id"]
 
     token = request.headers["token"]
 
     try:
-        run_statement("CALL new_menu_item(?,?,?,?,?,?)", (description, image_url, name, price, restaurant_id, token))
-        return make_response('', 200)
+        response = run_statement("CALL new_menu_item(?,?,?,?,?)", (description, image_url, name, price, token))
+        if (response[0]["message"] == "Success"):
+            return make_response('', 200)
+        else:
+            return make_response("Error creating menu item: " + response[0]["message"], 400)
     except Exception as error:
         err = {}
         err["error"] = f"Error creating menu item: {error}"
@@ -340,7 +347,7 @@ def new_menu_item():
 @app.patch('/api/menu')
 def edit_menu_item():
     valid_check = check_endpoint_info(request.json, 
-                                      ["description", "image_url", "name", "price", "restaurant_id", "menu_id"])
+                                      ["description", "image_url", "name", "price", "menu_id"])
     if(type(valid_check) == str):
         return valid_check
     
@@ -353,13 +360,12 @@ def edit_menu_item():
     image_url = request.json["image_url"]
     name = request.json["name"]
     price = request.json["price"]
-    restaurant_id = request.json["restaurant_id"]
     menu_id = request.json["menu_id"]
 
     token = request.headers["token"]
 
     try:
-        run_statement("CALL edit_menu_item(?,?,?,?,?,?,?)", (description, image_url, name, price, restaurant_id, token, menu_id))
+        run_statement("CALL edit_menu_item(?,?,?,?,?,?)", (description, image_url, name, int(price), token, menu_id))
         return make_response('', 200)
     except Exception as error:
         err = {}

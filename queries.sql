@@ -48,7 +48,7 @@ create table restaurant (
     profile_url varchar(255) not null,
     banner_url varchar(255) not null,
     id int not null auto_increment,
-    email varchar(255) not null,
+    email varchar(255) not null unique,
     password varchar(255) not null,
     primary key (id)
 );
@@ -116,7 +116,7 @@ DELIMITER $$
 $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE lab3.set_token_restaurant(input_id int, input_token varchar(255))
 begin
-	insert into lab3.restaurant_session (restaurant_id_id, token) values (input_id, input_token);
+	insert into lab3.restaurant_session (restaurant_id, token) values (input_id, input_token);
 	commit;
     select * from restaurant_session where token = input_token;
 END$$
@@ -261,7 +261,7 @@ create DEFINER=`root`@`localhost` procedure `create_restaurant`(
     password_input varchar(255)
 )
 begin
-    insert into restaurant (name, address, phone, email, bio, city, profile_url, banner_url, password) values
+    insert into restaurant (name, address, phone_number, email, bio, city, profile_url, banner_url, password) values
         (name_input, address_input, phone_input, email_input, bio_input, city_input, profile_url_input, banner_url_input, password_input);
     commit;
     select id from restaurant where id = last_insert_id();
@@ -307,7 +307,7 @@ begin
             update restaurant set address = address_input where id = token_id;
         END IF;
         IF phone_input IS NOT NULL THEN
-            update restaurant set phone = phone_input where id = token_id;
+            update restaurant set phone_number = phone_input where id = token_id;
         END IF;
         IF profile_url_input IS NOT NULL THEN
             update restaurant set profile_url = profile_url_input where id = token_id;
@@ -363,8 +363,15 @@ create procedure restaurant_login(email_input varchar(255), password_input varch
     select id from restaurant where email = email_input and password = password_input;
 
 -- LOGOUT
-create procedure restaurant_logout(token_input varchar(255))
+DELIMITER $$
+$$
+create DEFINER=`root`@`localhost` procedure `restaurant_logout`(token_input varchar(255))
+begin
     delete from restaurant_session where token = token_input;
+    commit;
+    select 'Success' AS message;
+end$$
+DELIMITER ;
 
 -- GET ALL RESTAURANTS
 create procedure get_restaurants()
@@ -400,6 +407,7 @@ begin
         VALUES (description_input, image_url_input, name_input, price_input, token_id);
 
         commit;
+        SELECT 'Success' AS message;
 
     END IF;
 end$$
@@ -428,19 +436,20 @@ begin
 
     ELSE
         IF description_input IS NOT NULL THEN
-            update menu_item set description = description_input where restaurant_id = token_id and menu_id = menu_id_input;
+            update menu_item set description = description_input where restaurant_id = token_id and id = menu_id_input;
         END IF;
         IF image_url_input IS NOT NULL THEN
-            update menu_item set image_url = image_url_input where restaurant_id = token_id and menu_id = menu_id_input;
+            update menu_item set image_url = image_url_input where restaurant_id = token_id and id = menu_id_input;
         END IF;
         IF name_input IS NOT NULL THEN
-            update menu_item set name = name_input where restaurant_id = token_id and menu_id = menu_id_input;
+            update menu_item set name = name_input where restaurant_id = token_id and id = menu_id_input;
         END IF;
         IF price_input IS NOT NULL THEN
-            update menu_item set price = price_input where restaurant_id = token_id and menu_id = menu_id_input;
+            update menu_item set price = price_input where restaurant_id = token_id and id = menu_id_input;
         END IF;
 
         COMMIT;
+        SELECT 'Success' AS message;
 
     END IF;
 end$$
@@ -466,6 +475,7 @@ begin
     ELSE
         delete from menu_item where id = menu_id_input and restaurant_id = token_id;
         commit;
+        SELECT 'Success' AS message;
     end if;
 end$$
 DELIMITER ;
@@ -561,6 +571,7 @@ create DEFINER=`root`@`localhost` procedure `new_order_item`(order_id_input int,
 begin
     insert into order_menu_item (order_id, item_id) values (order_id_input, item_id_input);
     commit;
+    SELECT 'Success' AS message;
 end$$
 DELIMITER ;
 
