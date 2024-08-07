@@ -93,8 +93,7 @@ def delete_client():
     token = request.headers["token"]
     try:
         result = run_statement("CALL delete_client(?, ?)", (password, token))
-        if (result[0]["message"] == "Client Deleted"):
-            
+        if (result[0]["message"] == "Success"):
             return make_response('', 201)
         else:
             err = {}
@@ -136,7 +135,7 @@ def client_logout():
     
     token = request.headers["token"]
     try:
-        result = run_statement("CALL client_logout(?)", (token))
+        result = run_statement("CALL client_logout(?)", [token])
         if (result):
             return make_response('', 200)
     except Exception as error:

@@ -146,6 +146,7 @@ begin
     select id from client where id = last_insert_id();
 end$$
 DELIMITER ;
+
 -- PATCH
 DELIMITER $$
 $$
@@ -189,7 +190,7 @@ begin
         END IF;
 
         COMMIT;
-        select id from client where id = last_insert_id();
+        select 'Success' AS message;
         
     END IF;
 end$$
@@ -219,7 +220,7 @@ begin
         ELSE
             DELETE FROM client WHERE id = token_id;
             COMMIT;
-            SELECT 'Client Deleted' AS message;
+            SELECT 'Success' AS message;
         END IF;
     END IF;
 end$$
@@ -236,7 +237,7 @@ create DEFINER=`root`@`localhost` procedure ` client_logout`(token_input varchar
 begin
     delete from client_session where token = token_input;
     commit;
-    SELECT 'Token Deleted' AS message;
+    SELECT 'Success' AS message;
 end$$
 DELIMITER ;
 
@@ -322,6 +323,7 @@ begin
         END IF;
 
         commit;
+        SELECT 'Success' AS message;
     END IF;
 end$$
 DELIMITER ;
@@ -350,6 +352,7 @@ begin
         ELSE
             DELETE FROM restaurant WHERE id = token_id;
             COMMIT;
+            SELECT 'Success' AS message;
         END IF;
     END IF;
 end$$
