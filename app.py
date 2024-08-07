@@ -47,7 +47,7 @@ def create_client():
             token = new_token()
             # print(token)
             result2 = run_statement("CALL set_token(?,?)", (result[0]['id'], token))
-            return make_response(jsonify(result2[0]), 200)
+            return make_response(jsonify(result2[0]), 201)
             # return make_response(jsonify([result[0], {"token": token}]), 200)
 
     except Exception as error:
@@ -74,10 +74,8 @@ def update_client():
     token = request.headers["token"]
 
     try:
-        result = run_statement("CALL update_client(?, ?, ?, ?, ?, ?, ?)", (email, first_name, last_name, image_url, username, password, token))
-        if (result):
-            
-            return make_response(None, 200)
+        run_statement("CALL update_client(?, ?, ?, ?, ?, ?, ?)", (email, first_name, last_name, image_url, username, password, token))
+        return make_response('',201)
     except Exception as error:
         err = {}
         err["error"] = f"Error updating client: {error}"
@@ -95,9 +93,13 @@ def delete_client():
     token = request.headers["token"]
     try:
         result = run_statement("CALL delete_client(?, ?)", (password, token))
-        if (result):
+        if (result[0]["message"] == "Client Deleted"):
             
-            return make_response(None, 200)
+            return make_response('', 201)
+        else:
+            err = {}
+            err["error"] = f"Error deleting client: {result[0]["message"]}"
+            return make_response(jsonify(err), 400)
     except Exception as error:
         err = {}
         err["error"] = f"Error deleting client: {error}"
@@ -136,7 +138,7 @@ def client_logout():
     try:
         result = run_statement("CALL client_logout(?)", (token))
         if (result):
-            return make_response(None, 200)
+            return make_response('', 200)
     except Exception as error:
         err = {}
         err["error"] = f"Error logging out client: {error}"
@@ -211,10 +213,8 @@ def update_restaurant():
     token = request.headers["token"]
 
     try:
-        result = run_statement("CALL update_restaurant(?,?,?,?,?,?,?,?,?,?)", (name, address, phone, email, bio, city, profile_url, banner_url, password, token))
-        if (result):
-            
-            return make_response(None, 200)
+        run_statement("CALL update_restaurant(?,?,?,?,?,?,?,?,?,?)", (name, address, phone, email, bio, city, profile_url, banner_url, password, token))
+        return make_response('', 200)
     except Exception as error:
         err = {}
         err["error"] = f"Error updating client: {error}"
@@ -231,10 +231,8 @@ def delete_restaurant():
     password = request.json["password"]
     token = request.headers["token"]
     try:
-        result = run_statement("CALL delete_restaurant(?, ?)", (password, token))
-        if (result):
-            
-            return make_response(None, 200)
+        run_statement("CALL delete_restaurant(?, ?)", (password, token))
+        return make_response('', 200)
     except Exception as error:
         err = {}
         err["error"] = f"Error deleting restaurant: {error}"
@@ -282,9 +280,8 @@ def restaurant_logout():
     
     token = request.headers["token"]
     try:
-        result = run_statement("CALL restaurant_logout(?)", (token))
-        if (result):
-            return make_response(None, 200)
+        run_statement("CALL restaurant_logout(?)", (token))
+        return make_response('', 200)
     except Exception as error:
         err = {}
         err["error"] = f"Error logging out restaurant: {error}"
@@ -333,7 +330,7 @@ def new_menu_item():
 
     try:
         run_statement("CALL new_menu_item(?,?,?,?,?,?)", (description, image_url, name, price, restaurant_id, token))
-        return make_response(None, 200)
+        return make_response('', 200)
     except Exception as error:
         err = {}
         err["error"] = f"Error creating menu item: {error}"
@@ -364,7 +361,7 @@ def edit_menu_item():
 
     try:
         run_statement("CALL edit_menu_item(?,?,?,?,?,?,?)", (description, image_url, name, price, restaurant_id, token, menu_id))
-        return make_response(None, 200)
+        return make_response('', 200)
     except Exception as error:
         err = {}
         err["error"] = f"Error editing menu item: {error}"
@@ -388,7 +385,7 @@ def delete_menu_item():
 
     try:
         run_statement("CALL delete_menu_item(?,?)", (token, id))
-        return make_response(None, 200)
+        return make_response('', 200)
     except Exception as error:
         err = {}
         err["error"] = f"Error editing menu item: {error}"
@@ -417,7 +414,7 @@ def get_client_orders():
         
     try:
         response = run_statement("CALL get_client_order(?,?,?)", (token, is_confirmed, is_complete))
-        return make_response(response, 200)
+        return make_response(jsonify(response), 200)
     except Exception as error:
         err = {}
         err["error"] = f"Error getting client order: {error}"
@@ -473,7 +470,7 @@ def get_restaurant_orders():
         is_complete = -1
     try:
         response = run_statement("CALL get_restaurant_order(?,?,?)", (token, is_confirmed, is_complete))
-        return make_response(response, 200)
+        return make_response(jsonify(response), 200)
     except Exception as error:
         err = {}
         err["error"] = f"Error getting restaurant order: {error}"

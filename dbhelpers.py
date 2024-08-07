@@ -21,19 +21,12 @@ def connect_db():
 def execute_statement(cursor, statement, args = []):
   try:
     cursor.execute(statement, args)
-    try:
-      results = cursor.fetchall()
-      print(results == None)
-      if (results != []):
-        column_names = [desc[0] for desc in cursor.description] 
-        records = [dict(zip(column_names, row)) for row in results]
-        return records
-    except mariadb.ProgrammingError as error:
-      for msg in error.args:
-        if msg == "Cursor doesn't have a result set":
-          exit()
-        else:
-          raise error
+
+    results = cursor.fetchall()
+
+    column_names = [desc[0] for desc in cursor.description] 
+    records = [dict(zip(column_names, row)) for row in results]
+    return records
 
   except mariadb.ProgrammingError as error:
     print("PROGRAMMING ERROR:", error)
